@@ -5,7 +5,8 @@
 
 var FacebookUser = require('../models/facebook').FacebookUser;
 
-exports.index = function(req, res){
+exports.index = function(req, res)
+{
 	var user = new FacebookUser;
 	
 	user.Initialize(function()
