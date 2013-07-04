@@ -7,17 +7,30 @@ var FacebookUser = require('../models/facebook').FacebookUser;
 
 exports.index = function(req, res)
 {
-	var user = new FacebookUser;
-	
-	user.Initialize(function()
+	if(req.query.access_token !== undefined)
 	{
-		user.GetFriendList(function(friendList)
+		var user = new FacebookUser;
+		var accessToken = req.query.access_token;
+		
+		user.Initialize(accessToken, function()
 		{
-			user.GetMutualFriendListOfFriendList(friendList, function(allMutualFriendList)
+			/*user.GetFriendList(function(friendList)
 			{
-				var string = JSON.stringify(allMutualFriendList);
-				res.render('index', {data : string, title : 'boo'});
+				user.GetMutualFriendListOfFriendList(friendList, function(allMutualFriendList)
+				{
+					var string = JSON.stringify(allMutualFriendList);
+					res.render('index', {data : string, title : 'boo'});
+				});
+			});*/
+			
+			user.GetFriendsName(function(list)
+			{
+				res.render('index', {title : "boo", data : JSON.stringify(list)});
 			});
 		});
-	});
+	}
+	else
+	{
+		res.render('index_no_access_token');
+	}
 };

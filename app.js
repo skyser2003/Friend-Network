@@ -1,8 +1,9 @@
 var express = require('express');
-var routes = require('./controllers');
+var routes = require('./controllers/index');
 var http = require('http');
 var path = require('path');
 var app = express();
+var facebookInit = require('./socket/facebook.js');
 
 // all environments
 app.set('port', process.env.PORT || 8080);
@@ -24,6 +25,17 @@ if ('development' == app.get('env')) {
 
 app.get('/', routes.index);
 
-var server = http.createServer(app).listen(app.get('port'), function(){
+var server = http.createServer(app);
+server.listen(app.get('port'), function(){
   console.log('Express server listening on port ' + app.get('port'));
+});
+
+
+// Socket.io
+var io = require('socket.io').listen(server);
+
+io.sockets.on('connection', function (socket) {
+	socket.on('Give me initial data', function (data) {
+		facebookInit.Initialize(data, socket);
+  });
 });
