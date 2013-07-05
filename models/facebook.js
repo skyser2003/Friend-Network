@@ -68,7 +68,7 @@ function GetMutualFriendListOfFriendList(friendList, callback)
 
 	var params = {
 		method : "fql.query",
-		query : "SELECT uid1, uid2 FROM friend WHERE uid2 in (SELECT uid1 FROM friend WHERE uid2 = me()) AND uid1 IN (SELECT uid2 FROM friend WHERE uid1=me())"
+		query : "SELECT uid1, uid2 FROM friend WHERE uid2 in (SELECT uid1 FROM friend WHERE uid2 = me()) AND uid1 IN (SELECT uid2 FROM friend WHERE uid1=me() AND uid1 != uid2)"
 	};
 
 	this.facebook.api(params, function(err, data)
@@ -85,7 +85,7 @@ function GetFriendsName(callback)
 	var params = 
 	{
 		method : "fql.query",
-		query : "SELECT name FROM user WHERE uid in (SELECT uid1 FROM friend WHERE uid2 = me())"
+		query : "SELECT name,uid FROM user WHERE uid in (SELECT uid1 FROM friend WHERE uid2 = me())"
 	}
 	
 	this.facebook.api(params, function(err, data)
