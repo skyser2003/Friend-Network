@@ -24,6 +24,7 @@ if ('development' == app.get('env')) {
 }
 
 app.get('/', routes.index);
+app.get('/test', routes.test);
 
 var server = http.createServer(app);
 server.listen(app.get('port'), function(){
@@ -32,7 +33,7 @@ server.listen(app.get('port'), function(){
 
 
 // Socket.io
-var io = require('socket.io').listen(server);
+var io = require('socket.io').listen(server, {log : false});
 
 io.sockets.on('connection', function (socket) {
 	facebookInit.Initialize(socket);

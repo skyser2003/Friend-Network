@@ -2,18 +2,26 @@
 <html>
 	<head>
 		<title><%- title %></title>
+		
+		<link rel="stylesheet" type="text/css" href="/css/index.css"/>
 
 		<!--Libraries-->
 		<script type="text/javascript" src="/js/jquery.min.js"></script>
-		<script type="text/javascript" src="/js/d3.v3.min.js"></script>
+		<script type="text/javascript" src="/js/d3.v3.js"></script>
+		<script type="text/javascript" src="/js/kinetic.js"></script>
 		<script type="text/javascript" src="/socket.io/socket.io.js"></script>
 		
 		<script type="text/javascript" src="/js/person.js"></script>
 		<script type="text/javascript" src="/js/connection.js"></script>
+		<script type="text/javascript" src="/js/map.js"></script>
 		<script type="text/javascript" src="/js/world_manager.js"></script>
+		
 		<script type="text/javascript" src="/js/main.js"></script>
 	</head>
 	<body>
-		<div id="test"></div>
+		<div id="fb-root"></div>
+		
+		<svg id="canvas"></svg>
+		<canvas id="canvas_temp"></canvas>
 	</body>
 </html>

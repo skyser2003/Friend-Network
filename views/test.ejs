@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Test</title>
+		
+		<script type="text/javascript" src="/js/d3.v3.min.js"></script>
+		<script type="text/javascript">
+			function init()
+			{
+				var canvas = d3.select("#canvas");
+				var context = canvas.node().getContext("2d");
+				
+				context.beginPath();
+				context.arc(100, 200, 30, 0, 2 * Math.PI, false);
+				context.fillStyle = "green";
+				context.fill();
+				context.stroke();
+				
+			}
+		</script>
+	</head>
+	
+	<body onload="init()">
+		<canvas id="canvas" width="500" height="500"</div>
+	</body>
+</html>
