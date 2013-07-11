@@ -1,13 +1,27 @@
 var Map = function()
 {
+	this.Draw = null; // depends on drawing type : SVG or Canvas
+	
 	this.people = [];
+	this.selectedUid = 0;
+	this.fixPosition = {x: -1, y: -1};
 	
 	this.width = 0;
 	this.height = 0;
+	
+	this.scale = 1;
+	
+	this.nodes = [];
+	this.links = [];
+	this.nodeIndex = {};
 };
 
 Map.prototype.Initialize = function(data, accessToken)
 {
+	var nodes = this.nodes;
+	var links = this.links;
+	var nodeIndex = this.nodeIndex;
+
 	var friends = {};
 	var mutualFriends = data['mutualFriends'];
 	var mutualFriendsFriendList = {};
@@ -22,24 +36,29 @@ Map.prototype.Initialize = function(data, accessToken)
 	
 	this.people = [];
 	
-	this.width = document.body.clientWidth;
-    this.height = document.body.clientHeight * 0.95;
+	//this.width = document.body.clientWidth;
+    //this.height = document.body.clientHeight * 0.95;
+    
+    this.width = 1024;
+    this.height = 768;
     
 	var force = d3.layout.force()
     .charge(-480)
     .linkDistance(120)
     .size([this.width, this.height]);
-   
-    var nodes = [];
-    var links = [];
-    var nodeIndex = {};
     
     for(var uid in friends)
     {
+    	var img = new Image();
+    	img.width = 50;
+    	img.height = 50;
+    	img.src = "https://graph.facebook.com/" + uid + "/picture?type=square&access_token=" + accessToken;
+    	
 	    nodes.push(
 	    {
 	    	name : friends[uid],
 	    	uid : uid,
+	    	img : img,
 	    	group : 1
 	    });
 	    
@@ -166,19 +185,40 @@ Map.prototype.Initialize = function(data, accessToken)
 		.links(links)
 		.start();
 
- 	this.DrawSVG(force, nodes, links);
+	// Data & part of view
+			
+    var svg = d3.select("#svg")
+    .attr("width", this.width)
+    .attr("height", this.height);
+
+	var link = svg.selectAll(".link")
+		.data(links)
+		.enter()
+		.append("line")
+		
+	var node = svg.selectAll('.node')
+		.data(nodes)
+ 		.enter()
+ 		.append('circle')
+ 		.attr("r",20);
+		//.call(force.drag);
+
+ 	this.DrawCanvas(force, node, link);
 };
 Map.prototype.Destroy = function()
 {
 	this.people = [];
 };
 
-Map.prototype.DrawSVG = function(force, nodes, links)
+Map.prototype.DrawSVG = function(force, node, link)
 {
  	// View
-    var svg = d3.select("#canvas")
+    var svg = d3.select("#svg")
     .attr("width", this.width)
     .attr("height", this.height);
+    
+    d3.select("#canvas")
+    .style("display","none");
 
 	// Create thumbnail
 	/*for(var uid in friends)
@@ -198,25 +238,18 @@ Map.prototype.DrawSVG = function(force, nodes, links)
 	
 	var color = d3.scale.category20();
 	
-	var link = svg.selectAll(".link")
-		.data(links)
-		.enter().append("line")
-		.attr("class", "link")
+		link.attr("class", "link")
 		.style("stroke-width", function(d) { return Math.sqrt(d.value); });
 
-	var node = svg.selectAll('.node')
-		.data(nodes)
- 		.enter()
- 		.append("circle")
-		.attr("class", "node")
-		.attr("r", 20)
-		.style("fill", function(d) { return color(d.group); })
-		.call(force.drag);
+	node.attr("class", "node")
+		.style("fill", function(d) { return color(d.group); });
 
 	node.append("title")
 		.text(function(d) { return d.name; });
 		
 	force.on("tick", function() {
+		force.resume();
+		
 	    link.attr("x1", function(d) { return d.source.x; })
 		.attr("y1", function(d) { return d.source.y; })
 		.attr("x2", function(d) { return d.target.x; })
@@ -228,37 +261,176 @@ Map.prototype.DrawSVG = function(force, nodes, links)
 	
 	//node.attr("fill", function(d) { return "url(#" + d.uid + ")"; });
 }
-Map.prototype.DrawCanvas = function(force, nodes, links)
+Map.prototype.DrawCanvas = function(force, node, link)
 {
-	var svg = d3.select("#canvas")
-    .attr("width", 0)
-    .attr("height", 0);
+	var map = this;
+	var color = d3.scale.category20();
 
-	var canvas = d3.select("#canvas_temp")
+	d3.select("#svg")
+    .style("display", "none");
+
+	var canvas = d3.select("#canvas")
     .attr("width", this.width)
     .attr("height", this.height);
     
+    canvas.node().onmousedown = function() { return false; }
+    
     var context = canvas.node().getContext("2d");
+    
+    canvas.on('mousedown', function(d,i)
+    {
+    	var mouse = d3.mouse(this);
+    	
+	  	node.each(function(d,i)
+	  	{
+	  		var x = d.x;
+	  		var y = d.y;
+	  		var r = this.getAttribute('r');
+	  		
+	  		var relX = map.GetCanvasX(x);
+	  		var relY = map.GetCanvasY(y);
+	  		var relR = map.GetCanvasLength(r);
+	  		
+	  		if(Math.pow(mouse[0] - relX, 2) + Math.pow(mouse[1] - relY, 2) <= Math.pow(relR, 2))
+	  		{
+	  			var index = map.nodeIndex[d.uid];
+	  			console.log(map.nodes[index].name);
+	  			
+		  		map.selectedUid = d.uid;
+		  		map.fixPosition.x = x;
+		  		map.fixPosition.y = y;
+		  		
+		  		force.resume();
+			}
+	  	});
+    });
+    
+    canvas.on('mouseup', function(d,i)
+    {
+    	map.selectedUid = 0;
+    	map.fixPosition.x = map.fixPosition.y = -1;
+    });
+    
+    canvas.on('mousemove', function(d,i)
+    {
+    	var mouse = d3.mouse(this);
+    	
+    	// Dragging
+    	if(map.selectedUid != 0)
+    	{
+    		var index = map.nodeIndex[map.selectedUid];
+    		
+	    	map.nodes[index].x = map.GetRealX(mouse[0]);
+	    	map.nodes[index].y = map.GetRealY(mouse[1]);
+	    	
+	    	map.fixPosition.x = map.GetRealX(mouse[0]);
+	    	map.fixPosition.y = map.GetRealY(mouse[1]);
+    	}
+    	// Just hovering
+    	else
+    	{
+    	}
+    });
+    
+    canvas.on('mousewheel', function(d,i)
+    {
+    	var delta = d3.event.wheelDeltaY;
+    	
+    	map.scale += 0.0001 * delta;
+    });
+    
+   	force.on("tick", function()
+	{
+		if(map.selectedUid != 0)
+		{
+			var index = map.nodeIndex[map.selectedUid];
+			map.nodes[index].x = map.fixPosition.x;
+			map.nodes[index].y = map.fixPosition.y;
+		}
+	});
 
-	var link = svg.selectAll(".link")
-		.data(links);
-
-	var node = svg.selectAll('.node')
-		.data(nodes)
- 		.enter()
- 		.append('circle')
-		.call(force.drag);
+	this.Draw = function()
+    {
+    	context.clearRect(0,0, canvas.node().width, canvas.node().height);
 		
-	force.on("tick", function() {
-		context.clearRect(0,0, canvas.node().width, canvas.node().height);
+		link.each(function(d,i)
+		{
+			context.beginPath();
+			context.strokeStyle = "#000000";
+			context.lineWidth = map.GetCanvasLength(2);
+			context.moveTo(map.GetCanvasX(d.source.x), map.GetCanvasY(d.source.y));
+			context.lineTo(map.GetCanvasX(d.target.x), map.GetCanvasY(d.target.y));
+			context.stroke();
+		});
 		
 		node.each(function(d,i)
 		{
+			var x = map.GetCanvasX(d.x);
+			var y = map.GetCanvasY(d.y);
+			var r = map.GetCanvasLength(this.getAttribute('r'));
+			var imgWidth = map.GetCanvasLength(d.img.width);
+			var imgHeight = map.GetCanvasLength(d.img.height);
+
+			context.save();
+			
 			context.beginPath();
-			context.arc(d.x, d.y, 25, 0, 2 * Math.PI, false);
-			context.fillStyle = "green";
-			context.fill();
+			context.lineWidth = map.GetCanvasLength(2);
+			context.strokeStyle = "#000000";
+			context.arc(x, y, r, 0, 2 * Math.PI, false);
+			context.clip();
+			context.drawImage(d.img, x - r, y - r, imgWidth, imgHeight);
 			context.stroke();
+			context.closePath();
+			
+			context.restore();
 		});
-	});
+    };
+	setInterval(map.Draw, 1000 / 60);
 }
+
+Map.prototype.GetCanvasX = function(x)
+{
+	return x * this.scale;
+};
+Map.prototype.GetCanvasY = function(y)
+{
+	return y * this.scale;
+};
+Map.prototype.GetCanvasLength = function(length)
+{
+	return length * this.scale;
+};
+
+Map.prototype.GetRealX = function(canvasX)
+{
+	if(this.scale == 0)
+	{
+		return 0;
+	}
+	else
+	{	
+		return canvasX / this.scale;
+	}
+};
+Map.prototype.GetRealY = function(canvasY)
+{
+	if(this.scale == 0)
+	{
+		return 0;
+	}
+	else
+	{	
+		return canvasY / this.scale;
+	}
+};
+Map.prototype.GetRealLength = function(canvasLength)
+{
+	if(this.scale == 0)
+	{
+		return 0;
+	}
+	else
+	{	
+		return canvasLength / this.scale;
+	}
+};

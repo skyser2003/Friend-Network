@@ -80,6 +80,7 @@ function GetMutualFriendListOfFriendList(friendList, callback)
 		batchQueries.push(subBatch);
 	}
 
+	var batchQueryLeft = batchQueries.length;
 	var mutualFriendList = {};
 	
 	var callBatch = function(i, finalCallback)
@@ -103,24 +104,26 @@ function GetMutualFriendListOfFriendList(friendList, callback)
 				++index;
 			}
 			
-			if(i >= batchQueries.length - 1)
+			--batchQueryLeft;
+			
+			if(batchQueryLeft == 0)
 			{
 				finalCallback(mutualFriendList);
-			}
-			else
-			{
-				callBatch(i+1, finalCallback);
 			}
 		});
 	};
 
-	callBatch(0, callback);
-	
-	return;
+	for(var i=0;i<batchQueries.length;++i)
+	{
+		callBatch(i, callback);
+	}
+
 /*
 	var params = {
 		method : "fql.query",
 		query : "SELECT uid1, uid2 FROM friend WHERE uid1 in (SELECT uid1 FROM friend WHERE uid2 = me()) AND uid2 IN (SELECT uid1 FROM friend WHERE uid2=me())"
+		
+		// Why this query doesn't act as expected?  It should return all mutual relationship between my friends...
 	};
 
 	this.facebook.api(params, function(err, data)

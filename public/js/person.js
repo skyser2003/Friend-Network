@@ -1,4 +1,4 @@
 var Person = function()
 {
-	this.body = null;
+	var node = null;
 };
