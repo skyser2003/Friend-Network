@@ -18,15 +18,21 @@ jQuery(document).ready(function()
 		
 		FB.getLoginStatus(function(data)
 		{
+			// If not logged in or haven't authorized this app yet, do so
+			if(data.status == "not_authorized" || data.status == "unknown")
+			{
+				FB.login();
+			}
+			
 			var accessToken = data.authResponse.accessToken;
 			var socket = io.connect(location.origin);
 	
 			socket.on("Initial data", function(data)
 			{
-				jQuery("#test").html(JSON.stringify(data));
-				
-				var map = new Map;
-				map.Initialize(data, accessToken);
+				// Initialize
+				var control = new Controller;
+				control.Initialize(data, accessToken);
+				control.Run();
 			});
 		
 			socket.emit('Initialize', { accessToken : accessToken});
