@@ -5,7 +5,10 @@ var Canvas = function()
 	
 	// Data pointer
 	this.people = null;
-	this.link = null;
+	this.nodes = null;
+	this.links = null;
+	this.tooltipPerson = null;
+	this.highlightPerson = null;
 	
 	// View elements
 	this.scale = 0;
@@ -52,57 +55,152 @@ Canvas.prototype.SetPeople = function(people)
 {
 	this.people = people;
 }
-Canvas.prototype.SetLink = function(link)
+Canvas.prototype.SetNodes = function(nodes)
 {
-	this.link = link;
+	this.nodes = nodes;
+}
+Canvas.prototype.SetLinks = function(links)
+{
+	this.links = links;
 }
 
-Canvas.prototype.Draw = function(nodes, links)
+Canvas.prototype.SetTooltipPerson = function(person)
+{
+	this.tooltipPerson = person;
+}
+Canvas.prototype.SetHighlightPerson = function(person)
+{
+	this.highlightPerson = person;
+};
+
+Canvas.prototype.Draw = function()
 {
 	var self = this;
 	var canvas = this.canvas;
 	var context = this.context;
+	var nodes = this.nodes;
+	var links = this.links;
 	
 	var color = d3.scale.category20();
     
     context.clearRect(0,0, canvas.node().width, canvas.node().height);
+    
+    // Highlight person
+    if(this.highlightPerson !== null)
+    {
+    	var person = this.highlightPerson;
+    	var friends = person.GetFriends();
+    	
+    	for(var i in friends)
+    	{
+    		var friend = friends[i];
+    		var tempLink = 
+    		{
+    			source : person.GetData(),
+    			target : friend.GetData()
+    		};
+    		
+    		this.DrawLink(tempLink);
+    	}
+    	
+    	for(var i in friends)
+   		{
+			this.DrawPerson(friends[i]);
+   		}
+    	
+    	this.DrawPerson(person);
+    	
+    	return;
+    }
 	
 	for(var i in links)
 	{
-		var d = links[i];
-
-		context.beginPath();
-		context.strokeStyle = "#000000";
-		context.lineWidth = self.GetCanvasLength(2);
-		context.moveTo(self.GetCanvasX(d.source.x), self.GetCanvasY(d.source.y));
-		context.lineTo(self.GetCanvasX(d.target.x), self.GetCanvasY(d.target.y));
-		context.stroke();
+		this.DrawLink(links[i]);
 	}
 	
 	for(var i in nodes)
 	{
-		var d = nodes[i];
-		var person = d.person;
-		
-		var x = self.GetCanvasX(d.x);
-		var y = self.GetCanvasY(d.y);
-		var r = self.GetCanvasLength(person.GetNode().node().getAttribute('r'));
-		var imgWidth = self.GetCanvasLength(d.img.width);
-		var imgHeight = self.GetCanvasLength(d.img.height);
-
-		context.save();
-		
-		context.beginPath();
-		context.lineWidth = self.GetCanvasLength(10);
-		context.strokeStyle = color(d.group);
-		context.arc(x, y, r, 0, 2 * Math.PI, false);
-		context.clip();
-		context.drawImage(d.img, x - r, y - r, imgWidth, imgHeight);
-		context.stroke();
-		context.closePath();
-		
-		context.restore();
+		this.DrawNode(nodes[i]);
 	}
+	
+	if(this.tooltipPerson !== null)
+	{
+		this.DrawPersonInformation(this.tooltipPerson);
+	}
+}
+Canvas.prototype.DrawPersonInformation = function(person)
+{
+	var context = this.context;
+	var canvas = this;
+	
+	var x = canvas.GetCanvasX(person.GetData().x);
+	var y = canvas.GetCanvasY(person.GetData().y);
+	var data = person.GetData();
+	
+	var infoWidth = 200;
+	var infoHeight = 200;
+	
+	context.beginPath();
+	
+	context.moveTo(x - infoWidth / 2, y - 100);
+	context.lineTo(x - infoWidth / 2, y - 100 - infoHeight);
+	context.lineTo(x + infoWidth / 2, y - 100 - infoHeight);
+	context.lineTo(x + infoWidth / 2, y - 100);
+	context.lineTo(x - infoWidth / 2, y - 100);
+	
+	context.fillStyle = "#ABC";
+	context.fill();
+	
+	context.font = "30px Consolas";
+	context.fillStyle = "#000";
+	context.fillText(data.name, x - infoWidth / 2 + 10, y - 50 - infoHeight);
+	
+	context.closePath();
+}
+Canvas.prototype.DrawPerson = function(person)
+{
+	var self = this;
+	var context = this.context;
+	var color = d3.scale.category20();
+	var d = person.GetData();
+	
+	var x = self.GetCanvasX(d.x);
+	var y = self.GetCanvasY(d.y);
+	var r = self.GetCanvasLength(person.GetNode().node().getAttribute('r'));
+	var imgWidth = self.GetCanvasLength(d.img.width);
+	var imgHeight = self.GetCanvasLength(d.img.height);
+
+	context.save();
+	
+	context.beginPath();
+	context.lineWidth = self.GetCanvasLength(10);
+	context.strokeStyle = color(d.group);
+	context.arc(x, y, r, 0, 2 * Math.PI, false);
+	context.clip();
+	context.drawImage(d.img, x - r, y - r, imgWidth, imgHeight);
+	context.stroke();
+	context.closePath();
+	
+	context.restore();
+}
+
+Canvas.prototype.DrawNode = function(node)
+{
+	var person = node.person;
+	this.DrawPerson(person);
+}
+Canvas.prototype.DrawLink = function(link)
+{
+	var self = this;
+	var context = this.context;
+
+	context.beginPath();
+	context.strokeStyle = "#000000";
+	context.lineWidth = self.GetCanvasLength(2);
+	context.moveTo(self.GetCanvasX(link.source.x), self.GetCanvasY(link.source.y));
+	context.lineTo(self.GetCanvasX(link.target.x), self.GetCanvasY(link.target.y));
+	context.stroke();
+	context.closePath();
 }
 
 Canvas.prototype.GetScale = function()

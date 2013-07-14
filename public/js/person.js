@@ -26,3 +26,7 @@ Person.prototype.GetUid = function()
 {
 	return node.data()[0].uid;
 };
+Person.prototype.GetFriends = function()
+{
+	return this.friendList;
+}

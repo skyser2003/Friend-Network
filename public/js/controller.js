@@ -67,36 +67,53 @@ Controller.prototype.Run = function()
 	var people = map.GetPeople();
 	
 	canvasElem.node().onmousedown = function() { return false;};
+	canvasElem.node().oncontextmenu = function() { return false;};
 	
 	canvasElem.on('mousedown', function(d,i)
     {
 		// Click a node
     	var mouse = d3.mouse(this);
+    	var event = window.event;
     	
-    	for(var uid in people)
+    	switch(event.button)
     	{
-    		var person = people[uid];
-    		var node = person.GetNode();
-    		var d = person.GetData();
-    		
-    		if(canvas.IsInner(person, mouse[0], mouse[1]))
+    		// Left button
+    		case 0:
     		{
-    			console.log(person.GetData().name);
-	  			
-		  		control.selectedPerson = person;
-		  		control.fixPosition.x = x;
-		  		control.fixPosition.y = y;
-		  		
-		  		return;
+    			for(var uid in people)
+		    	{
+		    		var person = people[uid];
+		    		var node = person.GetNode();
+		    		var d = person.GetData();
+		    		
+		    		if(canvas.IsInner(person, mouse[0], mouse[1]))
+		    		{
+		    			console.log(person.GetData().name);
+			  			
+				  		control.selectedPerson = person;
+				  		control.fixPosition.x = canvas.GetRealX(mouse[0]);
+				  		control.fixPosition.y = canvas.GetRealY(mouse[1]);
+				  		
+				  		return;
+		    		}
+		    	}
     		}
+    		break;
+    		
+    		// Wheel button
+    		case 1:
+    		{
+    			
+    		}
+    		break;
+    		
+    		// Right button
+    		case 2:
+    		{
+			  	control.draggingCanvas = true;
+    		}
+    		break;
     	}
-    	
-	  	// Clicked background, so start dragging canvas
-	  	if(control.selectedPerson === null)
-	  	{
-		  	control.draggingCanvas = true;
-	  	}
-
     });
     
     canvasElem.on('mouseup', function(d,i)
@@ -182,13 +199,13 @@ Controller.prototype.Run = function()
     	
     	canvas.offset.x += alphaX;
     	canvas.offset.y += alphaY;
-    	
-    	console.log(afterScale);
     });
     
    	force.on("tick", function()
 	{
 		force.alpha(0.01);
+		canvas.SetTooltipPerson(null);
+		canvas.SetHighlightPerson(null);
 		
 		if(control.selectedPerson !== null)
 		{
@@ -196,6 +213,7 @@ Controller.prototype.Run = function()
 			
 			data.x = control.fixPosition.x;
 			data.y = control.fixPosition.y;
+			canvas.SetHighlightPerson(control.hoverPerson);
 		}
 		else if(control.hoverPerson !== null)
 		{
@@ -203,11 +221,17 @@ Controller.prototype.Run = function()
 			
 			data.x = control.fixPosition.x;
 			data.y = control.fixPosition.y;
+			
+			canvas.SetTooltipPerson(control.hoverPerson);
+			canvas.SetHighlightPerson(control.hoverPerson);
 		}
 	});
 	
 	var nodes = map.GetNodes();
 	var links = map.GetLinks();
+	
+	canvas.SetNodes(nodes);
+	canvas.SetLinks(links);
 	
 	var wrapperDraw = function()
 	{
