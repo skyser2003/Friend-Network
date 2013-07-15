@@ -23,7 +23,7 @@ Controller.prototype.Initialize = function(data, accessToken)
 	
 	this.width = document.body.clientWidth;
 	this.height = 768;
-	this.nodeRadius = 25;	
+	this.nodeRadius = 25;
 	
 	var map = this.map;
 	var canvas = this.canvas;
