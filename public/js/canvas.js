@@ -110,7 +110,11 @@ Canvas.prototype.Draw = function()
     	{
     		for(var i in links)
 			{
-				this.DrawLink(links[i]);
+				this.DrawLink(links[i], function()
+				{
+					context.strokeStyle = "#000000";
+					context.lineWidth = self.GetCanvasLength(2);
+				});
 			}
 			
 			for(var i in nodes)
@@ -130,6 +134,23 @@ Canvas.prototype.Draw = function()
     	
     	case this.viewType.highlight:
     	{
+    		for(var i in links)
+    		{
+    			this.DrawLink(links[i], function()
+    			{
+    				context.strokeStyle = "#DDDDDD";
+    				context.lineWidth = self.GetCanvasLength(2);
+    			});
+    		}
+			for(var i in nodes)
+			{
+				this.DrawNode(nodes[i], function()
+				{
+					context.strokeStyle = color(nodes[i].group + 1);
+					context.lineWidth = self.GetCanvasLength(2);
+				});
+			}
+			
 	    	var person = this.highlightPerson;
 	    	var friends = person.GetFriends();
 	    	
@@ -142,7 +163,11 @@ Canvas.prototype.Draw = function()
 	    			target : friend.GetData()
 	    		};
 	    		
-	    		this.DrawLink(tempLink);
+	    		this.DrawLink(tempLink, function()
+	    		{
+	    			context.strokeStyle = "#000000";
+					context.lineWidth = self.GetCanvasLength(2);
+	    		});
 	    	}
 	    	
 	    	for(var i in friends)
@@ -222,16 +247,19 @@ Canvas.prototype.DrawNode = function(node, option)
 	var person = node.person;
 	this.DrawPerson(person, option);
 }
-Canvas.prototype.DrawLink = function(link)
+Canvas.prototype.DrawLink = function(link, option)
 {
 	var self = this;
 	var context = this.context;
 
 	context.beginPath();
-	context.strokeStyle = "#000000";
-	context.lineWidth = self.GetCanvasLength(2);
 	context.moveTo(self.GetCanvasX(link.source.x), self.GetCanvasY(link.source.y));
 	context.lineTo(self.GetCanvasX(link.target.x), self.GetCanvasY(link.target.y));
+	
+	if(typeof(option) == "function")
+	{
+		option();
+	}
 	context.stroke();
 	context.closePath();
 }
