@@ -40,6 +40,7 @@ Map.prototype.Initialize = function(data, accessToken)
 	    	name : friends[uid],
 	    	uid : uid,
 	    	img : null,
+	    	imgDrawable : false,
 	    	group : 1
 	    });
 	    

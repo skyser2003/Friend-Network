@@ -23,6 +23,7 @@ var Canvas = function()
 	
 	// Options
 	this.viewMode = this.viewType.normal;
+	this.color = null;
 };
 
 Canvas.prototype.Initialize = function(width, height, elemID)
@@ -38,6 +39,7 @@ Canvas.prototype.Initialize = function(width, height, elemID)
 	this.context = this.canvas.node().getContext('2d');
 	
 	this.scale = 0.5;
+	this.color = d3.scale.category20();
 }
 Canvas.prototype.Destroy = function()
 {
@@ -99,8 +101,7 @@ Canvas.prototype.Draw = function()
 	var context = this.context;
 	var nodes = this.nodes;
 	var links = this.links;
-	
-	var color = d3.scale.category20();
+	var color = this.color;
     
     context.clearRect(0,0, canvas.node().width, canvas.node().height);
     
@@ -134,20 +135,11 @@ Canvas.prototype.Draw = function()
     	
     	case this.viewType.highlight:
     	{
-    		for(var i in links)
-    		{
-    			this.DrawLink(links[i], function()
-    			{
-    				context.strokeStyle = "#DDDDDD";
-    				context.lineWidth = self.GetCanvasLength(2);
-    			});
-    		}
 			for(var i in nodes)
 			{
 				this.DrawNode(nodes[i], function()
 				{
-					context.strokeStyle = color(nodes[i].group + 1);
-					context.lineWidth = self.GetCanvasLength(2);
+					drawPersonColor(self, nodes[i].person);
 				});
 			}
 			
@@ -219,7 +211,7 @@ Canvas.prototype.DrawPerson = function(person, option)
 {
 	var self = this;
 	var context = this.context;
-	var color = d3.scale.category20();
+	var color = this.color;
 	var d = person.GetData();
 	
 	var x = self.GetCanvasX(d.x);
@@ -338,18 +330,37 @@ Canvas.prototype.IsInner = function(person, mouseX, mouseY)
 var drawPersonFace = function(canvas, person)
 {
 	var context = canvas.context;
-	
-	var color = d3.scale.category20();
+	var color = canvas.color;
 	
 	var d = person.GetData();
-	var x = canvas.GetCanvasX(d.x);
-	var y = canvas.GetCanvasY(d.y);
-	var r = canvas.GetCanvasLength(person.GetNode().node().getAttribute('r'));
-	var imgWidth = canvas.GetCanvasLength(d.img.width);
-	var imgHeight = canvas.GetCanvasLength(d.img.height);
 	
-	context.lineWidth = canvas.GetCanvasLength(10);
-	context.strokeStyle = color(d.group);
-	context.clip();
-	context.drawImage(d.img, x - r, y - r, imgWidth, imgHeight);
+	if(d.imgDrawable === true)
+	{
+		var x = canvas.GetCanvasX(d.x);
+		var y = canvas.GetCanvasY(d.y);
+		var r = canvas.GetCanvasLength(person.GetNode().node().getAttribute('r'));
+		var imgWidth = canvas.GetCanvasLength(d.img.width);
+		var imgHeight = canvas.GetCanvasLength(d.img.height);
+		
+		context.lineWidth = canvas.GetCanvasLength(10);
+		context.strokeStyle = color(d.group + 1);
+		context.clip();
+		context.drawImage(d.img, x - r, y - r, imgWidth, imgHeight);
+//		context.fillStyle = "#DDDDDD";
+//		context.fill();
+	}
+	else
+	{
+		drawPersonColor(canvas, person);
+	}
+};
+var drawPersonColor = function(canvas, person)
+{
+	var context = canvas.context;
+	var color = canvas.color;
+	
+	context.strokeStyle = color(person.GetData().group + 1);
+	context.lineWidth = canvas.GetCanvasLength(2);
+	context.fillStyle = "#DDDDDD";
+	context.fill();
 };

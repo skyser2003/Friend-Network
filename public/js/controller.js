@@ -21,8 +21,8 @@ Controller.prototype.Initialize = function(data, accessToken)
 	this.map = new Map;
 	this.canvas = new Canvas;
 	
-	this.width = document.body.clientWidth;
-	this.height = 768;
+	this.width = 1024;
+	this.height = 700;
 	this.nodeRadius = 25;
 	
 	var map = this.map;
@@ -31,22 +31,42 @@ Controller.prototype.Initialize = function(data, accessToken)
 	// Initialize view & model
 	map.Initialize(data, accessToken);
 	canvas.Initialize(this.width, this.height, "canvas");
+
+	var errImg = new Image();
+	errImg.width = this.nodeRadius * 2;
+	errImg.height = this.nodeRadius * 2;
+	errImg.src = "http://pic.skyser.kr/img/%EC%86%8C%EB%82%98.jpg";
 	
 	// Initliaze a few more
 	var people = map.GetPeople();
 	
 	for(var uid in people)
 	{
+		var personData = people[uid].GetData();
+		var node = people[uid].GetNode();
+
     	var img = new Image();
     	img.width = this.nodeRadius * 2;
     	img.height = this.nodeRadius * 2;
     	img.src = "https://graph.facebook.com/" + uid + "/picture?type=square&access_token=" + accessToken;
-		
-		var data = people[uid].GetData();
-		var node = people[uid].GetNode();
-		
-		data.img = img;
+    	
+		personData.img = img;
 		node.attr("r", this.nodeRadius);
+		
+		(function(uuid)
+		{
+			var personData = people[uuid].GetData();
+			personData.img.onerror = function(e)
+	    	{
+	    		personData.img = errImg;
+	    		console.log("onerror called");
+	    	};
+	    	personData.img.onload = function()
+	    	{
+				personData.imgDrawable = true;
+				console.log("onload called");
+	    	};
+		})(uid);
 	}
 	
 	var force = map.GetForce();
