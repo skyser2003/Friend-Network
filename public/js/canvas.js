@@ -125,11 +125,6 @@ Canvas.prototype.Draw = function()
 					drawPersonFace(self, nodes[i].person);
 				});
 			}
-			
-			if(this.tooltipPerson !== null)
-			{
-				this.DrawPersonInformation(this.tooltipPerson);
-			}
     	}
     	break;
     	
@@ -164,16 +159,22 @@ Canvas.prototype.Draw = function()
 	    	
 	    	for(var i in friends)
 	   		{
-				this.DrawPerson(friends[i], function()
+				this.DrawPerson(friends[i], function(canvas, person)
 				{
-					drawPersonFace(self, friends[i]);
+					drawPersonFace(canvas, person);
 				});
 	   		}
 	    	
-	    	this.DrawPerson(person, function()
+	    	this.DrawPerson(person, function(canvas, person)
 	    	{
-	    		drawPersonFace(self, person);
+	    		drawPersonFace(canvas, person);
 	    	});
+	    	
+			if(this.tooltipPerson !== null)
+			{
+				this.DrawPersonInformation(this.tooltipPerson);
+			}
+
     	}
     	break;
     }
@@ -225,7 +226,7 @@ Canvas.prototype.DrawPerson = function(person, option)
 
 	if(typeof(option) == "function")
 	{
-		option();
+		option(self, person);
 	}
 	
 	context.stroke();
@@ -254,6 +255,13 @@ Canvas.prototype.DrawLink = function(link, option)
 	}
 	context.stroke();
 	context.closePath();
+}
+
+Canvas.prototype.SetScale = function(scale)
+{
+	scale = Math.max(0.1, scale);
+	scale = Math.min(1.0, scale);
+	this.scale = scale;
 }
 
 Canvas.prototype.GetScale = function()

@@ -35,7 +35,7 @@ Controller.prototype.Initialize = function(data, accessToken)
 	var errImg = new Image();
 	errImg.width = this.nodeRadius * 2;
 	errImg.height = this.nodeRadius * 2;
-	errImg.src = "http://pic.skyser.kr/img/%EC%86%8C%EB%82%98.jpg";
+	errImg.src = "http://pic.skyser.kr/img/소나.jpg";
 	
 	// Initliaze a few more
 	var people = map.GetPeople();
@@ -59,12 +59,10 @@ Controller.prototype.Initialize = function(data, accessToken)
 			personData.img.onerror = function(e)
 	    	{
 	    		personData.img = errImg;
-	    		console.log("onerror called");
 	    	};
 	    	personData.img.onload = function()
 	    	{
 				personData.imgDrawable = true;
-				console.log("onload called");
 	    	};
 		})(uid);
 	}
@@ -205,7 +203,7 @@ Controller.prototype.Run = function()
     	var delta = d3.event.wheelDeltaY;
     	
     	var beforeScale = canvas.GetScale();
-    	canvas.scale += 0.001 * delta * (beforeScale == 0 ? 1 : beforeScale);
+    	canvas.SetScale(beforeScale * (1 + 0.001 * delta));
     	var afterScale = canvas.GetScale();
     	
     	var alphaX = 0;
