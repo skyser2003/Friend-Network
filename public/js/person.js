@@ -7,7 +7,6 @@ var Person = function()
 Person.prototype.Initialize = function(node)
 {
 	this.node = node;
-	node.data()[0].person = this;
 };
 Person.prototype.AddFriend = function(person)
 {

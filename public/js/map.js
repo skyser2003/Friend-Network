@@ -5,19 +5,21 @@ var Map = function()
 	this.force = null;	
 	this.nodes = [];
 	this.links = [];
-	this.nodeIndex = {};
+	this.groups = [];
 };
 
 Map.prototype.Initialize = function(data, accessToken)
 {
+	var self = this;
+	
 	// Initialize member variables
-	this.people = {};
+	self.people = {};
 
-	var nodes = this.nodes;
-	var links = this.links;
-	var nodeIndex = this.nodeIndex;
+	var people = self.people;
+	var nodes = self.nodes;
+	var links = self.links;
 
-	var friends = {};
+	var nodeIndex = {}; // This is necessary to use d3.js.  Do not delete.
 	var mutualFriends = data['mutualFriends'];
 	var mutualFriendsFriendList = {};
 	
@@ -28,38 +30,29 @@ Map.prototype.Initialize = function(data, accessToken)
 		var uid = data['friends'][i]['uid'];
 		var name = data['friends'][i]['name'];
 		
-		friends[uid] = name;
-	}
-
-	// Create node
-    for(var uid in friends)
-    {
-	    nodes.push(
-	    {
-	    	person : null,
-	    	name : friends[uid],
+		var person = new Person;
+		var datum = {
+			//d3.js data set
+			// None!
+			
+			// custom data set
+	    	name : name,
+	    	group : 1,
+	    	person : person,
 	    	uid : uid,
 	    	img : null,
-	    	imgDrawable : false,
-	    	group : 1
-	    });
-	    
-	    nodeIndex[uid] = nodes.length - 1;
-    }
-    
-    // Create node
-    for(var i in nodes)
-    {
-	    var person = new Person;
-
+	    	imgDrawable : false
+	    }
+	
 	    var node = svg.append('circle')
 	    .attr("class","node")
-	    .data([nodes[i]]);
+	    .data([datum]);
 	    
 	    person.Initialize(node);
-	    
-	    this.people[nodes[i].uid] = person;
-    }
+	    people[uid] = person;
+		nodes.push(datum);
+	    nodeIndex[uid] = nodes.length - 1;
+	}
 
     for(var friendID in mutualFriends)
     {
@@ -70,8 +63,8 @@ Map.prototype.Initialize = function(data, accessToken)
     		var uid1 = friendID;
 	    	var uid2 = mutuals[index];
 	    	
-	    	var name1 = friends[uid1]['name'];
-	    	var name2 = friends[uid2]['name'];
+	    	var name1 = people[uid1].GetData()['name'];
+	    	var name2 = people[uid2].GetData()['name'];
 	    	
 	    	//Find duplicate link
 	    	var duplicate = false;
@@ -85,13 +78,17 @@ Map.prototype.Initialize = function(data, accessToken)
 	    		}
 	    	}
 	    	
-	    	if(!duplicate)
+	    	if(duplicate == false)
 	    	{
 	  		    links.push(
 		    	{
+		    		// d3.js data set
 		    		source : nodeIndex[uid1],
 		    		target : nodeIndex[uid2],
 		    		value : 1
+		    		
+		    		// custom data set
+		    		// None!
 		    	});
 	    	}
     	}
@@ -103,8 +100,8 @@ Map.prototype.Initialize = function(data, accessToken)
     	var uidSource = nodes[links[i].source].uid;
     	var uidTarget = nodes[links[i].target].uid;
     	
-   		this.people[uidSource].AddFriend(this.people[uidTarget]);
-   		this.people[uidTarget].AddFriend(this.people[uidSource]);
+   		self.people[uidSource].AddFriend(self.people[uidTarget]);
+   		self.people[uidTarget].AddFriend(self.people[uidSource]);
     }
 
 	// Data & part of view
@@ -115,12 +112,12 @@ Map.prototype.Initialize = function(data, accessToken)
 	    .data([links[i]]);
     }
     
-   	this.force = d3.layout.force()
+   	self.force = d3.layout.force()
    	.charge(-480 * 2)
     .linkDistance(500)
     .linkStrength(0.5);
 
- 	this.force
+ 	self.force
 		.nodes(nodes)
 		.links(links)
 };

@@ -18,23 +18,25 @@ var Controller = function()
 
 Controller.prototype.Initialize = function(data, accessToken)
 {
-	this.map = new Map;
-	this.canvas = new Canvas;
+	var self = this;
 	
-	this.width = 1024;
-	this.height = 700;
-	this.nodeRadius = 25;
+	self.map = new Map;
+	self.canvas = new Canvas;
 	
-	var map = this.map;
-	var canvas = this.canvas;
+	self.width = 1024;
+	self.height = 700;
+	self.nodeRadius = 25;
+	
+	var map = self.map;
+	var canvas = self.canvas;
 	
 	// Initialize view & model
 	map.Initialize(data, accessToken);
-	canvas.Initialize(this.width, this.height, "canvas");
+	canvas.Initialize(self.width, self.height, "canvas");
 
 	var errImg = new Image();
-	errImg.width = this.nodeRadius * 2;
-	errImg.height = this.nodeRadius * 2;
+	errImg.width = self.nodeRadius * 2;
+	errImg.height = self.nodeRadius * 2;
 	errImg.src = "http://pic.skyser.kr/img/소나.jpg";
 	
 	// Initliaze a few more
@@ -46,12 +48,12 @@ Controller.prototype.Initialize = function(data, accessToken)
 		var node = people[uid].GetNode();
 
     	var img = new Image();
-    	img.width = this.nodeRadius * 2;
-    	img.height = this.nodeRadius * 2;
+    	img.width = self.nodeRadius * 2;
+    	img.height = self.nodeRadius * 2;
     	img.src = "https://graph.facebook.com/" + uid + "/picture?type=square&access_token=" + accessToken;
     	
 		personData.img = img;
-		node.attr("r", this.nodeRadius);
+		node.attr("r", self.nodeRadius);
 		
 		(function(uuid)
 		{
@@ -69,17 +71,17 @@ Controller.prototype.Initialize = function(data, accessToken)
 	
 	var force = map.GetForce();
 	
-	force.size([this.width, this.height])
+	force.size([self.width, self.height])
 	.start();
 };
 
 Controller.prototype.Run = function()
 {
-	var control = this;
+	var self = this;
 	var map = this.map;
 	
-	var canvasElem = this.canvas.GetCanvas();
-	var canvas = this.canvas;
+	var canvasElem = self.canvas.GetCanvas();
+	var canvas = self.canvas;
 	
 	var force = map.GetForce();
 	var people = map.GetPeople();
@@ -101,20 +103,21 @@ Controller.prototype.Run = function()
     			for(var uid in people)
 		    	{
 		    		var person = people[uid];
-		    		var node = person.GetNode();
 		    		var d = person.GetData();
 		    		
 		    		if(canvas.IsInner(person, mouse[0], mouse[1]))
 		    		{
 		    			console.log(person.GetData().name);
 			  			
-				  		control.selectedPerson = person;
-				  		control.fixPosition.x = canvas.GetRealX(mouse[0]);
-				  		control.fixPosition.y = canvas.GetRealY(mouse[1]);
+				  		self.selectedPerson = person;
+				  		self.fixPosition.x = canvas.GetRealX(mouse[0]);
+				  		self.fixPosition.y = canvas.GetRealY(mouse[1]);
 				  		
 				  		return;
 		    		}
 		    	}
+		    	
+		    	self.draggingCanvas = true;
     		}
     		break;
     		
@@ -128,7 +131,7 @@ Controller.prototype.Run = function()
     		// Right button
     		case 2:
     		{
-			  	control.draggingCanvas = true;
+			  	self.draggingCanvas = true;
     		}
     		break;
     	}
@@ -136,14 +139,14 @@ Controller.prototype.Run = function()
     
     canvasElem.on('mouseup', function(d,i)
     {
-    	control.selectedPerson = null;
+    	self.selectedPerson = null;
     	
-    	if(control.hoverPerson === null)
+    	if(self.hoverPerson === null)
     	{
-    		control.fixPosition.x = control.fixPosition.y = -1;
+    		self.fixPosition.x = self.fixPosition.y = -1;
     	}
     	
-    	control.draggingCanvas = false;
+    	self.draggingCanvas = false;
     });
     
     canvasElem.on('mousemove', function(d,i)
@@ -151,34 +154,34 @@ Controller.prototype.Run = function()
     	var mouse = d3.mouse(this);
     	
     	// Dragging node
-    	if(control.selectedPerson !== null)
+    	if(self.selectedPerson !== null)
     	{
-    		var data = control.selectedPerson.GetData();
+    		var data = self.selectedPerson.GetData();
     		
 	    	data.x = canvas.GetRealX(mouse[0]);
 	    	data.y = canvas.GetRealY(mouse[1]);
 	    	
-	    	control.fixPosition.x = canvas.GetRealX(mouse[0]);
-	    	control.fixPosition.y = canvas.GetRealY(mouse[1]);
+	    	self.fixPosition.x = canvas.GetRealX(mouse[0]);
+	    	self.fixPosition.y = canvas.GetRealY(mouse[1]);
     	}
     	// Hovering over a node
-    	else if(control.hoverPerson !== null && canvas.IsInner(control.hoverPerson, mouse[0], mouse[1]))
+    	else if(self.hoverPerson !== null && canvas.IsInner(self.hoverPerson, mouse[0], mouse[1]))
     	{
-	    	var data = control.hoverPerson.GetData();
+	    	var data = self.hoverPerson.GetData();
 	    	
-	    	data.x = control.fixPosition.x;
-	    	data.y = control.fixPosition.y;
+	    	data.x = self.fixPosition.x;
+	    	data.y = self.fixPosition.y;
     	}
     	// Moving around canvas
-    	else if(control.draggingCanvas == true)
+    	else if(self.draggingCanvas == true)
     	{
-	    	canvas.offset.x += canvas.GetRealLength(mouse[0] - control.prevMouse.x);
-	    	canvas.offset.y += canvas.GetRealLength(mouse[1] - control.prevMouse.y);
+	    	canvas.offset.x += canvas.GetRealLength(mouse[0] - self.prevMouse.x);
+	    	canvas.offset.y += canvas.GetRealLength(mouse[1] - self.prevMouse.y);
     	}
     	// Just hovering
     	else
     	{
-    		control.hoverPerson = null;
+    		self.hoverPerson = null;
     		
     		for(var uid in people)
     		{
@@ -186,15 +189,15 @@ Controller.prototype.Run = function()
     			
     			if(canvas.IsInner(person, mouse[0], mouse[1]))
     			{
-    				control.hoverPerson = person;
-    				control.fixPosition.x = person.GetData().x;
-    				control.fixPosition.y = person.GetData().y;
+    				self.hoverPerson = person;
+    				self.fixPosition.x = person.GetData().x;
+    				self.fixPosition.y = person.GetData().y;
     			};
     		}
        	}
     	
-    	control.prevMouse.x = mouse[0];
-    	control.prevMouse.y = mouse[1];
+    	self.prevMouse.x = mouse[0];
+    	self.prevMouse.y = mouse[1];
     });
     
     canvasElem.on('mousewheel', function(d,i)
@@ -225,23 +228,23 @@ Controller.prototype.Run = function()
 		canvas.SetTooltipPerson(null);
 		canvas.SetHighlightPerson(null);
 		
-		if(control.selectedPerson !== null)
+		if(self.selectedPerson !== null)
 		{
-			var data = control.selectedPerson.GetData();
+			var data = self.selectedPerson.GetData();
 			
-			data.x = control.fixPosition.x;
-			data.y = control.fixPosition.y;
-			canvas.SetHighlightPerson(control.hoverPerson);
+			data.x = self.fixPosition.x;
+			data.y = self.fixPosition.y;
+			canvas.SetHighlightPerson(self.hoverPerson);
 		}
-		else if(control.hoverPerson !== null)
+		else if(self.hoverPerson !== null)
 		{
-			var data = control.hoverPerson.GetData();
+			var data = self.hoverPerson.GetData();
 			
-			data.x = control.fixPosition.x;
-			data.y = control.fixPosition.y;
+			data.x = self.fixPosition.x;
+			data.y = self.fixPosition.y;
 			
-			canvas.SetTooltipPerson(control.hoverPerson);
-			canvas.SetHighlightPerson(control.hoverPerson);
+			canvas.SetTooltipPerson(self.hoverPerson);
+			canvas.SetHighlightPerson(self.hoverPerson);
 		}
 	});
 	
