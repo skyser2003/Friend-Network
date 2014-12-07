@@ -13,7 +13,8 @@ jQuery(document).ready(function()
 		{
 			appId: '413975995318982',
 			status     : true, // Check Facebook Login status
-			xfbml      : true
+			xfbml      : true,
+			version    : 'v2.2'
 		});
 		
 		FB.getLoginStatus(function(data)
