@@ -37,7 +37,7 @@ Map.prototype.Initialize = function(data, accessToken)
 			
 			// custom data set
 	    	name : name,
-	    	group : 1,
+	    	group : -1,
 	    	person : person,
 	    	uid : uid,
 	    	img : null,
@@ -102,6 +102,78 @@ Map.prototype.Initialize = function(data, accessToken)
     	
    		self.people[uidSource].AddFriend(self.people[uidTarget]);
    		self.people[uidTarget].AddFriend(self.people[uidSource]);
+    }
+    
+    // Create group
+    var groupID = 0;
+    for(var i in links)
+    {
+    	var uid1 = nodes[links[i].source].uid;
+    	var uid2 = nodes[links[i].target].uid;
+    	
+    	var person1 = self.people[uid1];
+    	var person2 = self.people[uid2];
+    	
+    	// If they both have group, skip
+    	if(person1.GetData().group != -1 && person2.GetData().group != -1)
+    	{
+    		continue;
+    	}
+    	
+    	var commonFriendsCount = 0;
+    	
+    	var friends1 = person1.GetFriends();
+    	var friends2 = person2.GetFriends();
+    	
+    	for(var j in friends1)
+    	{
+    		var friend1 = friends1[j];
+    		
+    		for(var k in friends2)
+    		{
+    			var friend2 = friends2[k];
+    			
+    			if(friend1 === friend2)
+    			{
+    				++commonFriendsCount;
+    			}
+    		}
+    	}
+    	
+    	// They belong to same group
+    	if(commonFriendsCount >= 5)
+    	{
+    		var group1 = person1.GetData().group;
+    		var group2 = person2.GetData().group;
+    		
+    		// Create a new group
+    		if(group1 == -1 && group2 == -1)
+    		{
+    			person1.GetData().group = groupID;
+    			person2.GetData().group = groupID;
+
+    			self.groups[groupID] = [];
+				self.groups[groupID].push(person1);
+				self.groups[groupID].push(person2);
+				   			
+    			++groupID;
+    		}
+    		else
+    		{
+    			var existingGroup = group1 == -1 ? group2 : group1;
+    			person1.GetData().group = existingGroup;
+    			person2.GetData().group = existingGroup;
+    			
+    			if(group1 == -1)
+    			{
+    				self.groups[existingGroup].push(person1);
+    			}
+    			else
+    			{
+    				self.groups[existingGroup].push(person2);
+    			}
+    		}
+    	}
     }
 
 	// Data & part of view
