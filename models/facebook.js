@@ -23,6 +23,12 @@ function Initialize(accessToken, callback)
 
 	fs.readFile("data/app_data.txt", {encoding : "UTF-8"}, function(err,data)
 	{
+		if(err)
+		{
+			console.log("You must have 'data/app_data.txt' file!");
+			throw "Error";
+			return;
+		}
 		var appID = data.match(/appID=(.*)/)[1];
 		var secret = data.match(/secret=(.*)/)[1];
 
