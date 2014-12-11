@@ -8,7 +8,7 @@ function boo(json)
 jQuery(document).ready(function()
 {
 	$.ajaxSetup({ cache: true });
-	$.getScript('//connect.facebook.net/en_UK/all.js', function() {
+	$.getScript('//connect.facebook.net/en_US/sdk.js', function() {
 		FB.init(
 		{
 			appId: '413975995318982',
