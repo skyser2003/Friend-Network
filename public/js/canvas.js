@@ -204,7 +204,7 @@ Canvas.prototype.DrawPersonInformation = function(person)
 	
 	context.font = "30px Consolas";
 	context.fillStyle = "#000";
-	context.fillText(data.name, x - infoWidth / 2 + 10, y - 50 - infoHeight);
+	context.fillText("Name : " + data.name, x - infoWidth / 2 + 10, y - 50 - infoHeight);
 	
 	context.closePath();
 }
